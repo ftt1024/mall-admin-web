@@ -1,7 +1,7 @@
 <template> 
   <div>
     <el-upload
-      action="http://macro-oss.oss-cn-shenzhen.aliyuncs.com"
+      :action="uploadUrl()"
       :data="dataObj"
       list-type="picture"
       :multiple="false" :show-file-list="showFileList"
@@ -65,6 +65,9 @@
       };
     },
     methods: {
+      uploadUrl() {
+        return process.env.BASE_API + '/file/upload/single';
+      },
       emitInput(val) {
         this.$emit('input', val)
       },
@@ -75,6 +78,16 @@
         this.dialogVisible = true;
       },
       beforeUpload(file) {
+        const isJpgAndPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        const isLt10M = file.size / 1024 / 1024 < 10;
+        if (!isJpgAndPng || !isLt10M) {
+          this.$message({
+            message: '只能上传jpg/png文件，且不超过10MB',
+            type: 'warning',
+            duration: 1000
+          });
+          return;
+        }
         let _self = this;
         return new Promise((resolve, reject) => {
           policy().then(response => {
